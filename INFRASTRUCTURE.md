@@ -10,11 +10,18 @@
   - 메인 데이터: URL 파라미터 내 암호화된 형태로 저장
   - 참조 메타데이터: 사용자 LocalStorage
 
-### 호스팅 (계획)
+### 호스팅 
 - **플랫폼**: Cloudflare Pages
-- **배포 방식**: Git 저장소 연동
+- **배포 방식**: Wrangler CLI 기반 직접 배포
 - **웹 서버**: Cloudflare CDN
-- **도메인**: 미정 (timefold.app 예상)
+- **프로젝트 URL**: https://timefold-7i7.pages.dev/
+- **도메인**: timefold.yetimates.com 
+
+### 배포 상태
+- **배포 방법**: `npx wrangler pages deploy public --project-name timefold`
+- **프로젝트 생성**: `npx wrangler pages project create timefold --production-branch main`
+- **최근 배포**: 성공 (Cloudflare Pages 배포 내역 확인)
+- **Node.js 버전**: v18 (.nvmrc로 지정)
 
 ### 보안 구조
 - **E2E 암호화**: 클라이언트에서 생성된 무작위 키로 암호화
