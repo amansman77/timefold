@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시간의 봉투 (Timefold) - 미래에게 보내는 메시지</title>
+    <meta name="description" content="기다림과 비밀이 콘텐츠의 가치를 만드는 메시지 플랫폼, 시간의 봉투(Timefold)">
+    <meta name="keywords" content="시간의 봉투, Timefold, 타임캡슐, 미래, 메시지, 암호화">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://timefold.app/">
+    <meta property="og:title" content="시간의 봉투 (Timefold)">
+    <meta property="og:description" content="기다림과 비밀이 콘텐츠의 가치를 만드는 메시지 플랫폼">
+    <meta property="og:image" content="https://timefold.app/image.jpg">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://timefold.app/">
+    <meta property="twitter:title" content="시간의 봉투 (Timefold)">
+    <meta property="twitter:description" content="기다림과 비밀이 콘텐츠의 가치를 만드는 메시지 플랫폼">
+    <meta property="twitter:image" content="https://timefold.app/image.jpg">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+            --card-bg: #fff;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 600px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            background: var(--card-bg);
+        }
+        
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section {
+            margin-bottom: 2rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        textarea, input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+            margin-bottom: 1rem;
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background-color: #4f46e5;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .countdown {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .message-content {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            background: #f9f9f9;
+            line-height: 1.8;
+        }
+        
+        .share-link {
+            word-break: break-all;
+            padding: 1rem;
+            background: #f0f0f0;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+        
+        .tab-container {
+            display: flex;
+            margin-bottom: 2rem;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            background: #eee;
+            cursor: pointer;
+        }
+        
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .envelope-animation {
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .envelope {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>시간의 봉투 (Timefold)</h1>
+        <p style="text-align: center; margin-bottom: 2rem;">기다림과 비밀이 콘텐츠의 가치를 만듭니다</p>
+        
+        <div class="tab-container">
+            <div class="tab active" id="create-tab">봉투 만들기</div>
+            <div class="tab" id="view-tab">봉투 열기</div>
+        </div>
+        
+        <!-- 봉투 만들기 섹션 -->
+        <div id="create-section">
+            <div class="section">
+                <label for="message">미래에게 보내는 메시지</label>
+                <textarea id="message" placeholder="미래의 누군가에게 전하고 싶은 메시지를 작성해보세요..."></textarea>
+            </div>
+            
+            <div class="section">
+                <label for="unlock-date">열람 가능 날짜</label>
+                <input type="datetime-local" id="unlock-date">
+            </div>
+            
+            <div class="section">
+                <button id="create-envelope" class="btn">봉투 만들기</button>
+            </div>
+            
+            <div id="share-section" class="section hidden">
+                <h3>당신의 메시지가 봉인되었습니다</h3>
+                <p>아래 링크를 복사하여 저장하거나 공유하세요.</p>
+                <div class="share-link" id="share-link"></div>
+                <button id="copy-link" class="btn">링크 복사하기</button>
+            </div>
+        </div>
+        
+        <!-- 봉투 열기 섹션 -->
+        <div id="view-section" class="hidden">
+            <div id="locked-section">
+                <div class="envelope-animation">
+                    <div class="envelope">✉️</div>
+                    <p>누군가가 당신에게 시간의 봉투를 보냈습니다</p>
+                </div>
+                
+                <div class="countdown" id="countdown"></div>
+                <p id="locked-message" style="text-align: center;">아직 열람할 수 없는 봉투입니다. 설정된 시간이 되면 열어볼 수 있습니다.</p>
+            </div>
+            
+            <div id="unlocked-section" class="hidden">
+                <h3>봉투가 열렸습니다</h3>
+                <div class="message-content" id="decrypted-message"></div>
+                <div class="section">
+                    <button id="create-new" class="btn">나도 봉투 만들기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM 요소
+        const createTab = document.getElementById('create-tab');
+        const viewTab = document.getElementById('view-tab');
+        const createSection = document.getElementById('create-section');
+        const viewSection = document.getElementById('view-section');
+        const messageInput = document.getElementById('message');
+        const unlockDateInput = document.getElementById('unlock-date');
+        const createEnvelopeBtn = document.getElementById('create-envelope');
+        const shareSection = document.getElementById('share-section');
+        const shareLinkDiv = document.getElementById('share-link');
+        const copyLinkBtn = document.getElementById('copy-link');
+        const lockedSection = document.getElementById('locked-section');
+        const unlockedSection = document.getElementById('unlocked-section');
+        const countdownDiv = document.getElementById('countdown');
+        const decryptedMessageDiv = document.getElementById('decrypted-message');
+        const createNewBtn = document.getElementById('create-new');
+        
+        // 페이지 로드 시 기본 설정
+        window.onload = function() {
+            // 기본 날짜를 내일로 설정
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(tomorrow.getHours());
+            tomorrow.setMinutes(0);
+            unlockDateInput.value = formatDateForInput(tomorrow);
+            
+            // URL 파라미터 확인
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('envelope')) {
+                // 열람 모드로 전환
+                viewTab.click();
+                
+                // 암호화된 데이터와 날짜 가져오기
+                const envelopeData = params.get('envelope');
+                try {
+                    const envelopeObj = JSON.parse(atob(envelopeData));
+                    checkEnvelopeStatus(envelopeObj);
+                } catch (error) {
+                    alert('유효하지 않은 봉투입니다.');
+                    createTab.click();
+                }
+            }
+        };
+        
+        // 탭 전환 이벤트
+        createTab.addEventListener('click', () => {
+            createTab.classList.add('active');
+            viewTab.classList.remove('active');
+            createSection.classList.remove('hidden');
+            viewSection.classList.add('hidden');
+            shareSection.classList.add('hidden');
+        });
+        
+        viewTab.addEventListener('click', () => {
+            viewTab.classList.add('active');
+            createTab.classList.remove('active');
+            viewSection.classList.remove('hidden');
+            createSection.classList.add('hidden');
+            
+            // URL에 envelope 파라미터가 없으면 안내 메시지 표시
+            const params = new URLSearchParams(window.location.search);
+            if (!params.has('envelope')) {
+                countdownDiv.innerHTML = '';
+                document.getElementById('locked-message').innerText = '봉투 링크를 통해 접근하세요.';
+            }
+        });
+        
+        // 봉투 생성 이벤트
+        createEnvelopeBtn.addEventListener('click', createEnvelope);
+        
+        // 링크 복사 이벤트
+        copyLinkBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(shareLinkDiv.textContent)
+                .then(() => {
+                    alert('링크가 복사되었습니다.');
+                })
+                .catch(err => {
+                    console.error('링크 복사 실패:', err);
+                });
+        });
+        
+        // 새 봉투 만들기 이벤트
+        createNewBtn.addEventListener('click', () => {
+            window.location.href = window.location.pathname;
+        });
+        
+        // 봉투 생성 함수
+        function createEnvelope() {
+            const message = messageInput.value.trim();
+            const unlockDate = new Date(unlockDateInput.value).getTime();
+            
+            if (!message) {
+                alert('메시지를 입력해주세요.');
+                return;
+            }
+            
+            if (!unlockDateInput.value || isNaN(unlockDate)) {
+                alert('유효한 열람 날짜를 설정해주세요.');
+                return;
+            }
+            
+            if (unlockDate <= Date.now()) {
+                alert('열람 날짜는 현재 시간보다 미래여야 합니다.');
+                return;
+            }
+            
+            // 메시지 암호화
+            const encryptionKey = generateRandomKey();
+            const encryptedMessage = encryptMessage(message, encryptionKey);
+            
+            // 봉투 객체 생성
+            const envelope = {
+                message: encryptedMessage,
+                unlockDate: unlockDate,
+                key: encryptionKey
+            };
+            
+            // Base64 인코딩하여 URL 생성
+            const envelopeData = btoa(JSON.stringify(envelope));
+            const shareUrl = `${window.location.origin}${window.location.pathname}?envelope=${envelopeData}`;
+            
+            // 공유 섹션 표시
+            shareLinkDiv.textContent = shareUrl;
+            shareSection.classList.remove('hidden');
+            
+            // 로컬스토리지에 저장 (선택적)
+            saveToLocalStorage(envelope);
+        }
+        
+        // 봉투 상태 확인 함수
+        function checkEnvelopeStatus(envelope) {
+            const now = Date.now();
+            const unlockDate = envelope.unlockDate;
+            
+            if (now >= unlockDate) {
+                // 열람 가능 상태
+                lockedSection.classList.add('hidden');
+                unlockedSection.classList.remove('hidden');
+                
+                // 메시지 복호화
+                const decryptedMessage = decryptMessage(envelope.message, envelope.key);
+                decryptedMessageDiv.textContent = decryptedMessage;
+            } else {
+                // 잠금 상태
+                lockedSection.classList.remove('hidden');
+                unlockedSection.classList.add('hidden');
+                
+                // 카운트다운 시작
+                startCountdown(unlockDate);
+            }
+        }
+        
+        // 카운트다운 함수
+        function startCountdown(unlockDate) {
+            updateCountdown(unlockDate);
+            
+            const countdownInterval = setInterval(() => {
+                const remaining = updateCountdown(unlockDate);
+                
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                    window.location.reload(); // 시간이 되면 페이지 새로고침
+                }
+            }, 1000);
+        }
+        
+        // 카운트다운 업데이트 함수
+        function updateCountdown(unlockDate) {
+            const now = Date.now();
+            const remaining = unlockDate - now;
+            
+            if (remaining <= 0) {
+                countdownDiv.innerHTML = '봉투를 열 수 있습니다!';
+                return 0;
+            }
+            
+            const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+            
+            countdownDiv.innerHTML = `
+                열람까지 남은 시간<br>
+                ${days}일 ${hours}시간 ${minutes}분 ${seconds}초
+            `;
+            
+            return remaining;
+        }
+        
+        // 암호화 함수
+        function encryptMessage(message, key) {
+            return CryptoJS.AES.encrypt(message, key).toString();
+        }
+        
+        // 복호화 함수
+        function decryptMessage(encryptedMessage, key) {
+            const bytes = CryptoJS.AES.decrypt(encryptedMessage, key);
+            return bytes.toString(CryptoJS.enc.Utf8);
+        }
+        
+        // 랜덤 키 생성 함수
+        function generateRandomKey() {
+            return CryptoJS.lib.WordArray.random(16).toString();
+        }
+        
+        // 로컬 스토리지 저장 함수
+        function saveToLocalStorage(envelope) {
+            try {
+                let envelopes = JSON.parse(localStorage.getItem('timefold-envelopes')) || [];
+                envelopes.push({
+                    id: Date.now(),
+                    unlockDate: envelope.unlockDate,
+                    createdAt: Date.now()
+                });
+                localStorage.setItem('timefold-envelopes', JSON.stringify(envelopes));
+            } catch (error) {
+                console.error('로컬 스토리지 저장 실패:', error);
+            }
+        }
+        
+        // 날짜 포맷 함수
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    </script>
+</body>
+</html> 

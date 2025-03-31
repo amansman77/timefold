@@ -1,0 +1,21 @@
+{
+  "name": "timefold",
+  "version": "0.1.0",
+  "description": "시간의 봉투 (Timefold) - 미래에게 보내는 메시지 플랫폼",
+  "main": "index.js",
+  "scripts": {
+    "start": "serve public -s",
+    "dev": "serve public"
+  },
+  "keywords": [
+    "timefold",
+    "시간의 봉투",
+    "time-lock",
+    "encryption"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+} 
