@@ -269,7 +269,7 @@
     </style>
 </head>
 <body>
-    <div class="version-badge">v0.2.0</div>
+    <div class="version-badge">v0.3.0</div>
     <div class="container">
         <h1>시간의 봉투 (Timefold)</h1>
         <p style="text-align: center; margin-bottom: 2rem;">기다림과 비밀이 콘텐츠의 가치를 만듭니다</p>
@@ -334,6 +334,10 @@
         </div>
     </div>
     
+    <div class="text-center text-sm text-gray-500 mt-4">
+        시간의 봉투 v0.3.0
+    </div>
+    
     <script>
         // DOM 요소
         const createTab = document.getElementById('create-tab');
@@ -364,8 +368,11 @@
             '별빛', '웃음', '햇살', '노래', '바다', '하늘', '숲', '꽃'
         ];
         
+        // API 엔드포인트 설정
+        const API_BASE_URL = 'https://timefold.amansman77.workers.dev';
+        
         // 페이지 로드 시 기본 설정
-        window.onload = function() {
+        window.onload = async function() {
             // 기본 날짜를 내일로 설정
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
@@ -375,19 +382,50 @@
             
             // URL 파라미터 확인
             const params = new URLSearchParams(window.location.search);
-            if (params.has('envelope')) {
-                // 열람 모드로 전환
-                viewTab.click();
-                
-                // 암호화된 데이터와 날짜 가져오기
+            const version = params.get('v') || '1.0';
+            
+            if (version.startsWith('3')) {
+                // 0.3.0 방식: 서버에서 데이터 조회
+                const id = params.get('id');
+                if (id) {
+                    // 봉투 열기 탭으로 전환
+                    viewTab.click();
+                    
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/api/envelopes/${id}`, {
+                            headers: {
+                                'X-User-Token': generateUserToken()
+                            }
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch envelope');
+                        }
+                        
+                        const envelope = await response.json();
+                        currentEnvelope = envelope;
+                        checkEnvelopeStatus(envelope);
+                    } catch (error) {
+                        console.error('봉투 조회 실패:', error);
+                        alert('봉투를 불러오는데 실패했습니다.');
+                        createTab.click();
+                    }
+                }
+            } else {
+                // 0.1.0, 0.2.0 방식: URL에서 직접 데이터 처리
                 const envelopeData = params.get('envelope');
-                try {
-                    const envelopeObj = JSON.parse(atob(envelopeData));
-                    currentEnvelope = envelopeObj;
-                    checkEnvelopeStatus(envelopeObj);
-                } catch (error) {
-                    alert('유효하지 않은 봉투입니다.');
-                    createTab.click();
+                if (envelopeData) {
+                    // 봉투 열기 탭으로 전환
+                    viewTab.click();
+                    
+                    try {
+                        const envelopeObj = JSON.parse(atob(envelopeData));
+                        currentEnvelope = envelopeObj;
+                        checkEnvelopeStatus(envelopeObj);
+                    } catch (error) {
+                        alert('유효하지 않은 봉투입니다.');
+                        createTab.click();
+                    }
                 }
             }
         };
@@ -444,7 +482,7 @@
             try {
                 // 비밀번호로 복호화 시도
                 const decryptedMessage = decryptWithPassword(
-                    currentEnvelope.message, 
+                    currentEnvelope.encrypted_message || currentEnvelope.message, 
                     currentEnvelope.key, 
                     password
                 );
@@ -510,7 +548,7 @@
         }
         
         // 봉투 생성 함수 (수정)
-        function createEnvelope() {
+        async function createEnvelope() {
             const message = messageInput.value.trim();
             const unlockDate = new Date(unlockDateInput.value).getTime();
             
@@ -535,42 +573,56 @@
             // 비밀번호로 이중 암호화
             const { encryptedMessage, timeKey } = encryptWithPassword(message, password);
             
-            // 봉투 객체 생성
-            const envelope = {
-                message: encryptedMessage,
-                unlockDate: unlockDate,
-                key: timeKey,
-                passwordProtected: true // 새 봉투 플래그
-            };
-            
-            // Base64 인코딩하여 URL 생성
-            const envelopeData = btoa(JSON.stringify(envelope));
-            const shareUrl = `${window.location.origin}${window.location.pathname}?envelope=${envelopeData}`;
-            
-            // 공유 섹션 표시
-            shareLinkDiv.textContent = shareUrl;
-            shareSection.classList.remove('hidden');
-            
-            // 비밀번호 표시 및 복사 UI 추가
-            shareSection.insertAdjacentHTML('afterbegin', renderPasswordCopyUI(password));
-            
-            // 비밀번호 복사 이벤트
-            document.getElementById('copy-password').addEventListener('click', () => {
-                navigator.clipboard.writeText(password)
-                    .then(() => {
-                        const copySuccess = document.getElementById('copy-success');
-                        copySuccess.classList.add('visible');
-                        setTimeout(() => {
-                            copySuccess.classList.remove('visible');
-                        }, 2000);
+            try {
+                // 0.3.0 방식: 서버에 저장
+                const response = await fetch(`${API_BASE_URL}/api/envelopes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-Token': generateUserToken()
+                    },
+                    body: JSON.stringify({
+                        unlockAt: unlockDate,
+                        passwordProtected: true,
+                        encryptedMessage: encryptedMessage,
+                        userToken: generateUserToken()
                     })
-                    .catch(err => {
-                        console.error('비밀번호 복사 실패:', err);
-                    });
-            });
-            
-            // 로컬스토리지에 저장 (선택적)
-            saveToLocalStorage(envelope);
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create envelope');
+                }
+
+                const { id } = await response.json();
+                
+                // 공유 URL 생성 (0.3.0 방식)
+                const shareUrl = `${window.location.origin}${window.location.pathname}?v=3.0&id=${id}`;
+                
+                // 공유 섹션 표시
+                shareLinkDiv.textContent = shareUrl;
+                shareSection.classList.remove('hidden');
+                
+                // 비밀번호 표시 및 복사 UI 추가
+                shareSection.insertAdjacentHTML('afterbegin', renderPasswordCopyUI(password));
+                
+                // 비밀번호 복사 이벤트
+                document.getElementById('copy-password').addEventListener('click', () => {
+                    navigator.clipboard.writeText(password)
+                        .then(() => {
+                            const copySuccess = document.getElementById('copy-success');
+                            copySuccess.classList.add('visible');
+                            setTimeout(() => {
+                                copySuccess.classList.remove('visible');
+                            }, 2000);
+                        })
+                        .catch(err => {
+                            console.error('비밀번호 복사 실패:', err);
+                        });
+                });
+            } catch (error) {
+                console.error('봉투 생성 실패:', error);
+                alert('봉투 생성에 실패했습니다. 다시 시도해주세요.');
+            }
         }
         
         // 메시지 이중 암호화 (시간 + 비밀번호)
@@ -602,22 +654,23 @@
         }
         
         // 봉투 상태 확인 함수 (하위 호환성 포함)
-        function checkEnvelopeStatus(envelope) {
+        async function checkEnvelopeStatus(envelope) {
             const now = Date.now();
-            const unlockDate = envelope.unlockDate;
+            // 서버 데이터와 기존 데이터 모두 지원
+            const unlockDate = Number(envelope.unlock_at) || Number(envelope.unlockDate);
             
             if (now >= unlockDate) {
                 // 시간 조건 충족됨
                 lockedSection.classList.add('hidden');
                 
                 // 하위 호환성 체크: passwordProtected 필드 존재 여부 확인
-                if (envelope.passwordProtected) {
+                if (envelope.password_protected || envelope.passwordProtected) {
                     // 비밀번호 보호된 봉투
                     passwordSection.classList.remove('hidden');
                 } else {
                     // 기존 방식 봉투: 바로 복호화
                     unlockedSection.classList.remove('hidden');
-                    const decryptedMessage = decryptMessage(envelope.message, envelope.key);
+                    const decryptedMessage = decryptMessage(envelope.encrypted_message || envelope.message, envelope.key);
                     decryptedMessageDiv.textContent = decryptedMessage;
                 }
             } else {
@@ -680,20 +733,14 @@
             return CryptoJS.lib.WordArray.random(16).toString();
         }
         
-        // 로컬 스토리지 저장 함수
-        function saveToLocalStorage(envelope) {
-            try {
-                let envelopes = JSON.parse(localStorage.getItem('timefold-envelopes')) || [];
-                envelopes.push({
-                    id: Date.now(),
-                    unlockDate: envelope.unlockDate,
-                    createdAt: Date.now(),
-                    passwordProtected: envelope.passwordProtected || false
-                });
-                localStorage.setItem('timefold-envelopes', JSON.stringify(envelopes));
-            } catch (error) {
-                console.error('로컬 스토리지 저장 실패:', error);
+        // 사용자 토큰 생성 함수
+        function generateUserToken() {
+            let token = localStorage.getItem('timefold-user-token');
+            if (!token) {
+                token = crypto.randomUUID();
+                localStorage.setItem('timefold-user-token', token);
             }
+            return token;
         }
         
         // 날짜 포맷 함수

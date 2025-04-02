@@ -1,0 +1,11 @@
+name = "timefold"
+main = "workers/index.js"
+compatibility_date = "2024-04-02"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "timefold-db"
+database_id = "880c982a-e569-4909-934c-00ce911b90d9"
+
+[site]
+bucket = "./public" 
